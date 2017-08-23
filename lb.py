@@ -54,16 +54,89 @@ def generar_eq(rho, u_x, u_y, f_eq):
 #%% Relajación mediante colisiones
 
 def coll(f, f_eq, tau):
+    """
+    Actualiza la f por relajación con el término de colisiones
+    """
     w = 1/tau; 
-    f = (1-w)*f + w*f_eq     
+    f[:,:,:] = (1-w)*f[:,:,:] + w*f_eq[:,:,:]     
 
 #%% Advección
 
+def advect(f_old, f_new):
+    """
+    Realiza la advección para los puntos en el interior del recinto
+    """
+    N_x = f_old.shape[0]
+    N_y = f_old.shape[1]
+    
+    for i in range(1,N_x-1):
+        for j in range(1,N_y-1):
+            f_new[i,j,0] = f_old[i,j,0]
+            f_new[i,j,1] = f_old[i-1,j,1]
+            f_new[i,j,2] = f_old[i,j-1,2]
+            f_new[i,j,3] = f_old[i+1,j,3]
+            f_new[i,j,4] = f_old[i,j+1,4]
+            f_new[i,j,5] = f_old[i-1,j-1,5]
+            f_new[i,j,6] = f_old[i+1,j-1,6]
+            f_new[i,j,7] = f_old[i+1,j+1,0]
+            f_new[i,j,8] = f_old[i-1,j+1,8]
+    
 
-  
+#%% Condiciones de contorno
+
+def bounce_sup(f_old, f_new):
+    """
+    Realiza la advección para los puntos en el borde superior del recinto,
+    incluyendo la condición de contorno de rebote
+    """
+    N_y = f_old.shape[1]
+    
+    for j in range(1,N_y-1):
+        f_new[0,j,0] = f_old[0,j,0]
+        f_new[0,j,1] = f_old[0,j-1,1]
+        f_new[0,j,2] = f_old[1,j,2]
+        f_new[0,j,3] = f_old[0,j+1,3]
+        f_new[0,j,4] = f_old[0,j,2]
+        f_new[0,j,5] = f_old[1,j-1,5]
+        f_new[0,j,6] = f_old[1,j-1,6]
+        f_new[0,j,7] = f_old[0,j,5]
+        f_new[0,j,8] = f_old[0,j,6]
     
     
+def bounce_inf(f_old, f_new):
+    """
+    Realiza la advección para los puntos en el borde inferior del recinto,
+    incluyendo la condición de contorno de rebote
+    """
+    N_x = f_old.shape[0]
+    N_y = f_old.shape[1]
     
+    piso = N_x - 1
+    for j in range(1,N_y-1):
+        f_new[piso,j,0] = f_old[piso,j,0]
+        f_new[piso,j,1] = f_old[piso,j-1,1]
+        f_new[piso,j,2] = f_old[piso,j,4]
+        f_new[piso,j,3] = f_old[piso,j+1,3]
+        f_new[piso,j,4] = f_old[piso-1,j,4]
+        f_new[piso,j,5] = f_old[piso,j,7]
+        f_new[piso,j,6] = f_old[piso,j,8]
+        f_new[piso,j,7] = f_old[piso-1,j+1,7]
+        f_new[piso,j,8] = f_old[piso-1,j-1,8]
+    
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
     
     
 
