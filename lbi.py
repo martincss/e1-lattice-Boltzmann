@@ -15,9 +15,11 @@ N_x = 16; X = linspace(0,1,N_x)
 N_y = 32; Y = linspace(0,2,N_y)
 t_max = 300
 q = 9
+# frecuencia y tiempo de relajación
 omega = 0.9
 tau = 1/omega
 nu = 1
+# tomamos el paso temporal acorde al tiempo de relajación y la viscosidad
 delta_x = 2/N_y
 delta_t = (2*tau-1)/6 *(delta_x)**2/nu
 c = delta_x/delta_t 
@@ -25,7 +27,8 @@ c = delta_x/delta_t
 sigma = 5/12
 lambdaa = 1/3
 gamma = 1/12
-params_slg = [-4*sigma, lambdaa, lambdaa, lambdaa, lambdaa, gamma, gamma, gamma, gamma ] # los parámetros sigma, lambda y gamma
+# los parámetros sigma, lambda y gamma, que corresponden a cada i
+params_slg = [-4*sigma, lambdaa, lambdaa, lambdaa, lambdaa, gamma, gamma, gamma, gamma ] 
 w = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36] # los pesos
 
 g_old = zeros((N_x, N_y, q)) 
@@ -220,9 +223,13 @@ for i in range(t_max):
             
 #%% Ploteo
 
+#%%
 plt.figure()
-xx, yy = np.meshgrid(X,Y)
-plt.quiver(yy, xx, u_x, u_y)
+yy, xx = np.meshgrid(Y,X)
+plt.contourf(yy, xx, pres, cmap = 'cool')
+plt.quiver(yy, xx, u_x, u_y, color = 'k')
+
+#%%
 
 plt.figure()
 for i in range(N_y):
