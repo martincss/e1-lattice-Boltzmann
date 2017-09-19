@@ -38,11 +38,11 @@ g_eq = zeros((N_x, N_y, q))
 p_inlet = 1.1
 p_outlet = 1.0
 pres = ones((N_x, N_y))*1.05
-pres[:,0] = 1.1
-pres[:,N_y-1] = 1
+pres[:,0] = p_inlet
+pres[:,N_y-1] = p_outlet
 u_x = zeros((N_x, N_y))
 u_y = zeros((N_x, N_y))
-#u_y[1,:] = ones(N_y)
+
 
 def generar_d2q9():
     e = zeros((9,2))
@@ -226,19 +226,42 @@ for i in range(t_max):
 #%%
 plt.figure()
 yy, xx = np.meshgrid(Y,X)
-plt.contourf(yy, xx, pres, cmap = 'cool')
-plt.quiver(yy, xx, u_x, u_y, color = 'k')
+cont = plt.contourf(yy, xx, pres, cmap = 'cool')
+cbar = plt.colorbar(cont)
+cbar.ax.set_ylabel('Presión', fontsize = 15)
+plt.quiver(yy[::2, ::4], xx[::2, ::4], u_x[::2, ::4], u_y[::2, ::4], color = 'k')
+plt.xlabel('Coordenada $x$', fontsize = 15)
+plt.ylabel('Coordenada $y$', fontsize = 15)
+plt.title('Campo de velocidades y presiones', fontsize = 20)
+plt.show()
 
 #%%
 
 plt.figure()
+f = lambda x, delta_p, nu: delta_p/(4*nu)*x*(1-x)
 for i in range(N_y):
-    plt.plot(X, u_x[:,i])
+    puntos = plt.scatter(X, u_x[:,i])
+    plt.xlabel('Coordenada $y$', fontsize = 15)
+    plt.ylabel('Velocidad $u_x$', fontsize = 15)
+    plt.title('Perfil vertical de velocidades', fontsize = 20)
+    plt.grid(True)
+puntos = plt.scatter(X, u_x[:,i], label = 'Simulaciones')
+plt.plot(X, f(X, p_inlet-p_outlet, nu), label = 'Teórico')
+plt.legend()
+plt.show()
 
-plt.figure()            
+plt.figure()
+h = lambda x, p_in, delta_p: p_in - delta_p/2*x           
 for i in range(N_x):
-    plt.plot(Y, pres[i,:])
-            
+    plt.scatter(Y, pres[i,:])
+    plt.xlabel('Coordenada $x$', fontsize = 15)
+    plt.ylabel('Presión $p$', fontsize = 15)
+    plt.title('Perfil horizontal de presiones', fontsize = 20)
+    plt.grid(True)
+plt.scatter(Y, pres[i,:], label = 'Simulaciones')
+plt.plot(Y, h(Y, p_inlet, p_inlet-p_outlet), label = 'Teórico')
+plt.legend()
+plt.show()
             
     
     
