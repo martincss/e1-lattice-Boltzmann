@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Created on Fri Aug 25 04:11:42 2017
+Final de Estructura de la materia 1
+Método de Lattice-Boltzmann incompresible para el problema de Poiseuille plano
 
-@author: martin
+Martín Carusso
+2017
 """
 
 import numpy as np
@@ -31,10 +33,12 @@ gamma = 1/12
 params_slg = [-4*sigma, lambdaa, lambdaa, lambdaa, lambdaa, gamma, gamma, gamma, gamma ] 
 w = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36] # los pesos
 
+# inicializamos las funciones de distribución como arrays
 g_old = zeros((N_x, N_y, q)) 
 g_new = zeros((N_x, N_y, q)) 
 g_eq = zeros((N_x, N_y, q)) 
 
+# condiciones iniciales para la presion y velocidad
 p_inlet = 1.1
 p_outlet = 1.0
 pres = ones((N_x, N_y))*1.05
@@ -45,6 +49,10 @@ u_y = zeros((N_x, N_y))
 
 
 def generar_d2q9():
+	"""
+	Genera un array con los vectores del conjunto d2q9
+	como filas.
+	"""
     e = zeros((9,2))
     for i in range(1,5):
         e[i,0] = np.cos((i-1)*pi/2)
@@ -60,14 +68,24 @@ def generar_d2q9():
 #%% Generación de variables macroscópicas (moment update)
 
 def generar_p(g, sigma, u_x, u_y, w, c, p_inlet, p_outlet):
+	"""
+	Genera la un array con la presión en cada punto
+	a partir de la distribución g, los parámetros sigma, c y w, 
+	las condiciones de contorno p_inlet y p_outlet y 
+	las componentes de velocidad u_x u_y
+	"""
     N_y = g.shape[1]
-    # en la sum venia el axis = 2
+
     pres = c**2/(4*sigma)*( sum(g[:,:,1:], axis = 2) + s(0, u_x, u_y, w, c) )
     pres[:,0] = p_inlet
     pres[:,N_y-1] = p_outlet
     return pres
 
 def generar_vel(g, c):
+	"""
+	Genera las componentes de la velocidad u_x, u_y en cada punto
+	a partir de la distribución g y el parámetro c.
+	"""
     u_x = c*( (g[:,:,1] + g[:,:,5] + g[:,:,8]) - (g[:,:,3] + g[:,:,6] + g[:,:,7]) )
     u_y = c*( (g[:,:,2] + g[:,:,5] + g[:,:,6]) - (g[:,:,4] + g[:,:,7] + g[:,:,8]) )
     return u_x, u_y
@@ -75,14 +93,18 @@ def generar_vel(g, c):
 #%% Distribución de equilibrio a partir de rho y u
 
 def s(i, u_x, u_y, w, c):
+	"""
+	Genera la función s_i usada para calcular la distribución de 
+	equilibrio en Guo et. al, ec (2.4)
+	"""
     e = generar_d2q9()
     si = w[i]*( 3*(e[i,0]*u_x + e[i,1]*u_y)/c + 4.5*((e[i,0]*u_x + e[i,1]*u_y)**2)/(c**2) - 1.5*(u_x**2 + u_y**2)/(c**2) )
     return si
 
 def generar_eq(p, u_x, u_y, slg, c, g_eq):
     """
-    A partir de rho y u_x, u_y genera valores la distribución de equilibrio 
-    g_eq según la página 93
+    A partir de la presion y u_x, u_y genera valores 
+	para la distribución de equilibrio g_eq según la ec. (2.9)
     """
     for i in range(9):
         g_eq[:,:,i] = slg[i]*p/(c**2) + s(i, u_x, u_y, w, c)
@@ -160,8 +182,12 @@ def bounce_inf(g_old, g_new):
         g_new[piso,j,7] = g_old[piso-1,j+1,7]
         g_new[piso,j,8] = g_old[piso-1,j-1,8]
 
-# usar la old en estas? (en el termino de 1-w)
+
 def pressure_left(g_old, g_new, slg, p_inlet, u_x, u_y, w, c, omega):
+	"""
+	Actualiza las distribuciones g_i en el borde izquierdo del recinto
+	imponiendo la presión dada por p_inlet, según la extrapolación de Guo.
+	"""
 
     N_x = g_old.shape[0]
    
@@ -173,6 +199,10 @@ def pressure_left(g_old, g_new, slg, p_inlet, u_x, u_y, w, c, omega):
 
 
 def pressure_right(g_old, g_new, slg, p_outlet, u_x, u_y, w, c, omega):
+	"""
+	Actualiza las distribuciones g_i en el borde derecho del recinto
+	imponiendo la presión dada por p_outlet, según la extrapolación de Guo.
+	"""
     
     N_x = g_old.shape[0]
     N_y = g_old.shape[1]
@@ -188,6 +218,8 @@ def pressure_right(g_old, g_new, slg, p_outlet, u_x, u_y, w, c, omega):
 
 def time_evol(g_eq, g_old, g_new, pres, u_x, u_y, params_slg, w, c, omega, sigma, p_inlet, p_outlet):
     """
+	Genera la evolución temporal del fluido, realizando todos los pasos del algoritmo.
+	Devuelve los arrays de presión y velocidades u_x, u_y actualizados.
     """
     # A partir de p y u, genero la g de equilibrio
     generar_eq(pres, u_x, u_y, params_slg, c, g_eq)
@@ -214,7 +246,7 @@ def time_evol(g_eq, g_old, g_new, pres, u_x, u_y, params_slg, w, c, omega, sigma
     return pres_new, u_xnew, u_ynew
 #
     
-#%% Acá el main
+#%% Acá la iteración temporal (main del programa)
 
 generar_eq(pres, u_x, u_y, params_slg, c, g_old)
 for i in range(t_max):
@@ -223,7 +255,7 @@ for i in range(t_max):
             
 #%% Ploteo
 
-#%%
+#%% Ploteo de los campos de velocidad y presión 
 plt.figure()
 yy, xx = np.meshgrid(Y,X)
 cont = plt.contourf(yy, xx, pres, cmap = 'cool')
@@ -235,10 +267,10 @@ plt.ylabel('Coordenada $y$', fontsize = 15)
 plt.title('Campo de velocidades y presiones', fontsize = 20)
 plt.show()
 
-#%%
+#%% Ploteo de los perfiles de velocidad y presión
 
 plt.figure()
-f = lambda x, delta_p, nu: delta_p/(4*nu)*x*(1-x)
+f = lambda x, delta_p, nu: delta_p/(4*nu)*x*(1-x) # solución teórica
 for i in range(N_y):
     puntos = plt.scatter(X, u_x[:,i])
     plt.xlabel('Coordenada $y$', fontsize = 15)
@@ -251,7 +283,7 @@ plt.legend()
 plt.show()
 
 plt.figure()
-h = lambda x, p_in, delta_p: p_in - delta_p/2*x           
+h = lambda x, p_in, delta_p: p_in - delta_p/2*x  # solución teórica         
 for i in range(N_x):
     plt.scatter(Y, pres[i,:])
     plt.xlabel('Coordenada $x$', fontsize = 15)
