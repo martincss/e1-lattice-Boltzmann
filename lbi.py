@@ -49,10 +49,10 @@ u_y = zeros((N_x, N_y))
 
 
 def generar_d2q9():
-	"""
-	Genera un array con los vectores del conjunto d2q9
-	como filas.
-	"""
+    """
+    Genera un array con los vectores del conjunto d2q9
+    como filas.
+    """
     e = zeros((9,2))
     for i in range(1,5):
         e[i,0] = np.cos((i-1)*pi/2)
@@ -68,24 +68,24 @@ def generar_d2q9():
 #%% Generación de variables macroscópicas (moment update)
 
 def generar_p(g, sigma, u_x, u_y, w, c, p_inlet, p_outlet):
-	"""
-	Genera la un array con la presión en cada punto
-	a partir de la distribución g, los parámetros sigma, c y w, 
-	las condiciones de contorno p_inlet y p_outlet y 
-	las componentes de velocidad u_x u_y
-	"""
+    """
+    Genera la un array con la presión en cada punto
+    a partir de la distribución g, los parámetros sigma, c y w, 
+    las condiciones de contorno p_inlet y p_outlet y 
+    las componentes de velocidad u_x u_y
+    """
     N_y = g.shape[1]
-
+    
     pres = c**2/(4*sigma)*( sum(g[:,:,1:], axis = 2) + s(0, u_x, u_y, w, c) )
     pres[:,0] = p_inlet
     pres[:,N_y-1] = p_outlet
     return pres
 
 def generar_vel(g, c):
-	"""
-	Genera las componentes de la velocidad u_x, u_y en cada punto
-	a partir de la distribución g y el parámetro c.
-	"""
+    """
+    Genera las componentes de la velocidad u_x, u_y en cada punto
+    a partir de la distribución g y el parámetro c.
+    """
     u_x = c*( (g[:,:,1] + g[:,:,5] + g[:,:,8]) - (g[:,:,3] + g[:,:,6] + g[:,:,7]) )
     u_y = c*( (g[:,:,2] + g[:,:,5] + g[:,:,6]) - (g[:,:,4] + g[:,:,7] + g[:,:,8]) )
     return u_x, u_y
@@ -93,10 +93,10 @@ def generar_vel(g, c):
 #%% Distribución de equilibrio a partir de rho y u
 
 def s(i, u_x, u_y, w, c):
-	"""
-	Genera la función s_i usada para calcular la distribución de 
-	equilibrio en Guo et. al, ec (2.4)
-	"""
+    """
+    Genera la función s_i usada para calcular la distribución de 
+    equilibrio en Guo et. al, ec (2.4)
+    """
     e = generar_d2q9()
     si = w[i]*( 3*(e[i,0]*u_x + e[i,1]*u_y)/c + 4.5*((e[i,0]*u_x + e[i,1]*u_y)**2)/(c**2) - 1.5*(u_x**2 + u_y**2)/(c**2) )
     return si
@@ -184,11 +184,11 @@ def bounce_inf(g_old, g_new):
 
 
 def pressure_left(g_old, g_new, slg, p_inlet, u_x, u_y, w, c, omega):
-	"""
-	Actualiza las distribuciones g_i en el borde izquierdo del recinto
-	imponiendo la presión dada por p_inlet, según la extrapolación de Guo.
-	"""
-
+    """
+    Actualiza las distribuciones g_i en el borde izquierdo del recinto
+    imponiendo la presión dada por p_inlet, según la extrapolación de Guo.
+    """
+    
     N_x = g_old.shape[0]
    
     g_bar = zeros((N_x,9))
@@ -199,10 +199,10 @@ def pressure_left(g_old, g_new, slg, p_inlet, u_x, u_y, w, c, omega):
 
 
 def pressure_right(g_old, g_new, slg, p_outlet, u_x, u_y, w, c, omega):
-	"""
-	Actualiza las distribuciones g_i en el borde derecho del recinto
-	imponiendo la presión dada por p_outlet, según la extrapolación de Guo.
-	"""
+    """
+    Actualiza las distribuciones g_i en el borde derecho del recinto
+    imponiendo la presión dada por p_outlet, según la extrapolación de Guo.
+    """
     
     N_x = g_old.shape[0]
     N_y = g_old.shape[1]
